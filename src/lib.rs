@@ -33,9 +33,9 @@ const CLIENT_ID: &'static str = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
 const CLIENT_SECRET: &'static str = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
 
 pub struct Client {
+    pub access_token: String,
     agent: reqwest::Client,
     agent_free: bool,
-    access_token: String,
 }
 
 impl Client {
