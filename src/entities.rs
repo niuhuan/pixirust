@@ -141,3 +141,7 @@ pub struct TrendTag {
     pub translated_name: Option<String>,
     pub illust: Illust,
 }
+
+pub const ILLUST_SEARCH_MODE_PARTIAL_MATCH_FOR_TAGS: &'static str = "partial_match_for_tags";
+pub const ILLUST_SEARCH_MODE_EXACT_MATCH_FOR_TAGS: &'static str = "exact_match_for_tags";
+pub const ILLUST_SEARCH_MODE_TITLE_AND_CAPTION: &'static str = "title_and_caption";

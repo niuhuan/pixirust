@@ -222,4 +222,21 @@ impl Client {
     pub async fn illust_trending_tags(&self) -> Result<IllustTrendingTags> {
         self.get_from_pixiv(self.illust_trending_tags_url()).await
     }
+
+    ///
+    /// mode:
+    /// partial_match_for_tags  - 标签部分一致
+    /// exact_match_for_tags    - 标签完全一致
+    /// title_and_caption       - 标题说明文
+    ///
+    /// sort: [date_desc, date_asc, popular_desc] - popular_desc为会员的热门排序
+    ///
+    pub fn illust_search_first_url(&self, word: String, mode: String) -> String {
+        format!(
+            "https://{}/v1/search/illust?word={}&search_target={}&filter=for_ios",
+            APP.server,
+            urlencoding::encode(word.as_str()),
+            mode,
+        )
+    }
 }
