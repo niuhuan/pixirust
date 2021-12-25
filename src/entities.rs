@@ -129,3 +129,15 @@ pub struct MetaPageImageUrls {
     pub large: String,
     pub original: String,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct IllustTrendingTags {
+    pub trend_tags: Vec<TrendTag>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TrendTag {
+    pub tag: String,
+    pub translated_name: Option<String>,
+    pub illust: Illust,
+}

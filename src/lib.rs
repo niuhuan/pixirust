@@ -211,4 +211,15 @@ impl Client {
     pub async fn illust_from_url(&self, url: String) -> Result<IllustResponse> {
         self.get_from_pixiv(url).await
     }
+
+    pub fn illust_trending_tags_url(&self) -> String {
+        format!(
+            "https://{}/v1/trending-tags/illust?filter=for_android",
+            APP.server,
+        )
+    }
+
+    pub async fn illust_trending_tags(&self) -> Result<IllustTrendingTags> {
+        self.get_from_pixiv(self.illust_trending_tags_url()).await
+    }
 }
