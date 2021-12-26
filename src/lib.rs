@@ -239,4 +239,13 @@ impl Client {
             mode,
         )
     }
+
+    ///
+    /// date 可以为 ""
+    pub fn illust_rank_first_utl(&self, mode: String, date: String) -> String {
+        format!(
+            "https://{}/v1/illust/ranking?mode={}&date={}&filter={}",
+            APP.server, mode, date, "for_android",
+        )
+    }
 }
