@@ -12,6 +12,8 @@ const APP_SERVER: &'static str = "app-api.pixiv.net";
 const APP_SERVER_IP: &'static str = "210.140.131.199";
 const OAUTH_SERVER: &'static str = "oauth.secure.pixiv.net";
 const OAUTH_SERVER_IP: &'static str = "210.140.131.199";
+const IMG_SERVER: &'static str = "i.pximg.net";
+const IMG_SERVER_IP: &'static str = "s.pximg.net";
 
 struct Server {
     pub server: &'static str,
@@ -28,6 +30,11 @@ const OAUTH: Server = Server {
     ip: OAUTH_SERVER_IP,
 };
 
+const IMG: Server = Server {
+    server: IMG_SERVER,
+    ip: IMG_SERVER_IP,
+};
+
 const SALT: &'static str = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 const CLIENT_ID: &'static str = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
 const CLIENT_SECRET: &'static str = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
@@ -39,6 +46,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// 创建客户端
     pub fn new() -> Self {
         Self {
             agent: reqwest::ClientBuilder::new().build().unwrap(),
@@ -46,6 +54,8 @@ impl Client {
             access_token: String::default(),
         }
     }
+
+    /// 免代理客户端
     pub fn new_agent_free() -> Self {
         Self {
             agent: reqwest::ClientBuilder::new()
@@ -57,7 +67,8 @@ impl Client {
         }
     }
 
-    fn btoa<T: AsRef<[u8]>>(&self, src: T) -> String {
+    /// pixiv的base64格式
+    fn base64_pixiv<T: AsRef<[u8]>>(&self, src: T) -> String {
         base64::encode(src)
             .replace("=", "")
             .replace("+", "-")
@@ -73,12 +84,12 @@ impl Client {
 
     /// 新建VerifyCode
     fn code_verify(&self) -> String {
-        self.btoa(uuid::Uuid::new_v4().to_string().replace("-", ""))
+        self.base64_pixiv(uuid::Uuid::new_v4().to_string().replace("-", ""))
     }
 
     /// 对VerifyCode加密
     fn code_challenge(&self, code: &String) -> String {
-        self.btoa(sha256(code.clone()))
+        self.base64_pixiv(sha256(code.clone()))
     }
 
     /// 创建一个登录用的url
@@ -153,6 +164,21 @@ impl Client {
         .await
     }
 
+    fn sign_request(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        let time = self.iso_time();
+        request
+            .header("x-client-time", &time.clone())
+            .header("x-client-hash", hex::encode(format!("{}{}", time, SALT)))
+            .header("accept-language", "zh-CN")
+            .header(
+                "User-Agent",
+                "PixivAndroidApp/5.0.234 (Android 10.0; Pixel C)",
+            )
+            .header("App-OS-Version", "Android 10.0")
+            .header("Referer", "https://app-api.pixiv.net/")
+            .bearer_auth(&self.access_token)
+    }
+
     pub async fn get_from_pixiv_raw(&self, url: String) -> Result<String> {
         let req = match self.agent_free {
             true => {
@@ -166,17 +192,7 @@ impl Client {
             }
             false => self.agent.get(url),
         };
-        let time = self.iso_time();
-        let req = req
-            .header("x-client-time", &time.clone())
-            .header("x-client-hash", hex::encode(format!("{}{}", time, SALT)))
-            .header("accept-language", "zh-CN")
-            .header(
-                "User-Agent",
-                "PixivAndroidApp/5.0.234 (Android 10.0; Pixel C)",
-            )
-            .header("App-OS-Version", "Android 10.0")
-            .bearer_auth(&self.access_token);
+        let req = self.sign_request(req);
         match req.send().await {
             Ok(rsp) => match &rsp.status().as_u16() {
                 200 => Ok(rsp.text().await?),
@@ -247,5 +263,27 @@ impl Client {
             "https://{}/v1/illust/ranking?mode={}&date={}&filter={}",
             APP.server, mode, date, "for_android",
         )
+    }
+
+    pub async fn load_image_data(&self, url: String) -> Result<bytes::Bytes> {
+        let req = match self.agent_free {
+            true => {
+                if url.starts_with(format!("https://{}", IMG.server).as_str()) {
+                    self.agent
+                        .get(url.replacen(IMG.server, IMG.ip.clone(), 1))
+                        .header("Host", IMG.server)
+                } else {
+                    self.agent.get(url)
+                }
+            }
+            false => self.agent.get(url),
+        };
+        let req = self.sign_request(req);
+        let rsp = req.send().await?;
+        let status = rsp.status();
+        match status.as_u16() {
+            200 => Ok(rsp.bytes().await?),
+            _ => Err(Box::new(Error::from(rsp.text().await?))),
+        }
     }
 }

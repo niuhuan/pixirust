@@ -4,3 +4,4 @@ Cargo.lock
 /.idea/
 *.iml
 /test*.json
+/test.jpg
