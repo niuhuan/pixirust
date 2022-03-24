@@ -1,11 +1,11 @@
 pub mod entities;
 mod test;
-pub mod types;
 mod utils;
 
+pub use anyhow::Error;
+pub use anyhow::Result;
 pub use entities::*;
 use serde_json::json;
-pub use types::*;
 use utils::*;
 
 const APP_SERVER: &'static str = "app-api.pixiv.net";
@@ -130,11 +130,11 @@ impl Client {
                     _ => {
                         let err: LoginErrorResponse =
                             serde_json::from_str(resp.text().await?.as_str())?;
-                        Err(Box::new(Error::from(err.errors.system.message)))
+                        Err(Error::msg(err.errors.system.message))
                     }
                 }
             }
-            Err(err) => Err(Box::new(Error::from(err.to_string()))),
+            Err(err) => Err(Error::msg(err)),
         }
     }
 
@@ -193,15 +193,13 @@ impl Client {
             false => self.agent.get(url),
         };
         let req = self.sign_request(req);
-        match req.send().await {
-            Ok(rsp) => match &rsp.status().as_u16() {
-                200 => Ok(rsp.text().await?),
-                _ => {
-                    let ae: AppError = serde_json::from_str(rsp.text().await?.as_str())?;
-                    Err(Box::new(Error::from(ae.error.message)))
-                }
-            },
-            Err(e) => Err(Box::new(e)),
+        let rsp = req.send().await?;
+        match &rsp.status().as_u16() {
+            200 => Ok(rsp.text().await?),
+            _ => {
+                let ae: AppError = serde_json::from_str(rsp.text().await?.as_str())?;
+                Err(Error::msg(ae.error.message))
+            }
         }
     }
 
@@ -283,7 +281,7 @@ impl Client {
         let status = rsp.status();
         match status.as_u16() {
             200 => Ok(rsp.bytes().await?),
-            _ => Err(Box::new(Error::from(rsp.text().await?))),
+            _ => Err(Error::msg(rsp.text().await?)),
         }
     }
 }

@@ -5,3 +5,5 @@ Cargo.lock
 *.iml
 /test*.json
 /test.jpg
+
+.DS_Store

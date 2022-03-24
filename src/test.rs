@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::types::*;
-    use crate::{Client, Token};
+    use crate::{Client, Result, Token};
     use std::sync::{Mutex, MutexGuard};
 
     // 懒加载, 维护全局token
