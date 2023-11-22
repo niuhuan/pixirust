@@ -4,6 +4,7 @@ mod utils;
 
 pub use anyhow::Error;
 pub use anyhow::Result;
+use base64::Engine;
 pub use entities::*;
 use serde_json::json;
 use utils::*;
@@ -69,7 +70,8 @@ impl Client {
 
     /// pixiv的base64格式
     fn base64_pixiv<T: AsRef<[u8]>>(&self, src: T) -> String {
-        base64::encode(src)
+        base64::prelude::BASE64_STANDARD
+            .encode(src)
             .replace("=", "")
             .replace("+", "-")
             .replace("/", "_")
@@ -184,7 +186,7 @@ impl Client {
             true => {
                 if url.starts_with(format!("https://{}", APP.server).as_str()) {
                     self.agent
-                        .get(url.replacen(APP.server, APP.ip.clone(), 1))
+                        .get(url.replacen(APP.server, APP.ip, 1))
                         .header("Host", APP.server)
                 } else {
                     self.agent.get(url)
@@ -268,7 +270,7 @@ impl Client {
             true => {
                 if url.starts_with(format!("https://{}", IMG.server).as_str()) {
                     self.agent
-                        .get(url.replacen(IMG.server, IMG.ip.clone(), 1))
+                        .get(url.replacen(IMG.server, IMG.ip, 1))
                         .header("Host", IMG.server)
                 } else {
                     self.agent.get(url)
