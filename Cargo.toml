@@ -24,11 +24,8 @@ anyhow = "1.0"
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
 lazy_static = "1.4.0"
+serde_path_to_error = "0.1.14"
 
 [features]
 default = ["reqwest/default"]
-native-tls = ["reqwest/native-tls"]
-rustls-tls = ["reqwest/rustls-tls"]
-rustls-tls-manual-roots = ["reqwest/rustls-tls-manual-roots"]
-rustls-tls-native-roots = ["reqwest/rustls-tls-native-roots"]
-rustls-tls-webpki-roots = ["reqwest/rustls-tls-webpki-roots"]
+

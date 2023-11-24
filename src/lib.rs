@@ -1,5 +1,5 @@
 pub mod entities;
-mod test;
+mod tests;
 mod utils;
 
 pub use anyhow::Error;
@@ -207,7 +207,19 @@ impl Client {
 
     async fn get_from_pixiv<T: for<'de> serde::Deserialize<'de>>(&self, url: String) -> Result<T> {
         let text = self.get_from_pixiv_raw(url).await?;
-        Ok(serde_json::from_str(text.as_str())?)
+        Ok(Client::from_str(text.as_str())?)
+    }
+
+    #[cfg(not(test))]
+    pub fn from_str<T: for<'de> serde::Deserialize<'de>>(json: &str) -> anyhow::Result<T> {
+        Ok(::serde_json::from_str(json)?)
+    }
+
+    #[cfg(test)]
+    pub fn from_str<T: for<'de> serde::Deserialize<'de>>(json: &str) -> anyhow::Result<T> {
+        Ok(serde_path_to_error::deserialize(
+            &mut serde_json::Deserializer::from_str(json),
+        )?)
     }
 
     pub fn illust_recommended_first_url(&self) -> String {
@@ -256,13 +268,12 @@ impl Client {
         )
     }
 
-    ///
-    /// date 可以为 ""
-    pub fn illust_rank_first_utl(&self, mode: String, date: String) -> String {
-        format!(
-            "https://{}/v1/illust/ranking?mode={}&date={}&filter={}",
-            APP.server, mode, date, "for_android",
-        )
+    pub async fn user_detail(&self, user_id: i64) -> Result<UserDetail> {
+        self.get_from_pixiv(format!(
+            "https://{}/v1/user/detail?filter=for_android&user_id={}",
+            APP.server, user_id,
+        ))
+        .await
     }
 
     pub async fn load_image_data(&self, url: String) -> Result<bytes::Bytes> {

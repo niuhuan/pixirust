@@ -120,6 +120,15 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_user_detail() {
+        let client = authed_client().await.unwrap();
+        println!(
+            "{}",
+            serde_json::to_string(&client.user_detail(50861724).await.unwrap()).unwrap(),
+        )
+    }
+
+    #[tokio::test]
     async fn test_load_image() {
         match no_auth_client().load_image_data("https://i.pximg.net/c/540x540_70/img-master/img/2021/04/18/17/22/42/89233845_p0_master1200.jpg".to_string()).await {
             Ok(img_bytes) => match std::fs::write("test.jpg", img_bytes) {
