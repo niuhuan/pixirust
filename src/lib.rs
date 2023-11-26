@@ -229,6 +229,13 @@ impl Client {
         )
     }
 
+    pub fn user_illusts_first_url(&self, user_id: i64) -> String {
+        format!(
+            "https://{}/v1/user/illusts?filter=for_android&user_id={}&type=illust",
+            APP.server, user_id,
+        )
+    }
+
     pub fn illust_rank_first_url(&self, mode: String, date: String) -> String {
         format!(
             "https://{}/v1/illust/ranking?filter=for_android&mode={}&date={}",
